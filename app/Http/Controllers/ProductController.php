@@ -3,38 +3,41 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;   
+use App\Models\Product;
 use App\Models\Category;
 
-// app/Http/Controllers/ProductController.php
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::where('active', true);
-        
-        if ($request->category) {
+        $query = Product::with('category')->where('active', true);
+
+        if ($request->filled('category')) {
             $query->whereHas('category', function($q) use ($request) {
                 $q->where('slug', $request->category);
             });
         }
-        
-        if ($request->search) {
+
+        if ($request->filled('search')) {
             $query->where('name', 'LIKE', '%' . $request->search . '%');
         }
-        
-        if ($request->min_price) {
+
+        if ($request->filled('min_price')) {
             $query->where('price', '>=', $request->min_price);
         }
-        
-        if ($request->max_price) {
+
+        if ($request->filled('max_price')) {
             $query->where('price', '<=', $request->max_price);
         }
-        
-        $products = $query->paginate(12);
+
+        $products = $query->paginate(12)->withQueryString();
         $categories = Category::where('active', true)->get();
-        
-        return view('products.index', compact('products', 'categories'));
+
+        return view('dashboard', [
+            'products'   => $products,
+            'categories' => $categories,
+            'filters'    => $request->only(['search', 'category', 'min_price', 'max_price'])
+        ]);
     }
 
     public function show(Product $product)
@@ -43,7 +46,7 @@ class ProductController extends Controller
             ->where('id', '!=', $product->id)
             ->limit(4)
             ->get();
-            
+
         return view('products.show', compact('product', 'relatedProducts'));
     }
 }
