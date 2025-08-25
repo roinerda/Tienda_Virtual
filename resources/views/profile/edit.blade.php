@@ -1,29 +1,49 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
+@section('title', 'Editar Perfil')
+
+@section('content')
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">✏️ Editar Perfil</h5>
+                </div>
+
+                <div class="card-body">
+                    @if (session('status') === 'profile-updated')
+                        <div class="alert alert-success">
+                            Perfil actualizado correctamente ✅
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('profile.update') }}">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-bold">Nombre</label>
+                            <input type="text" name="name" id="name" class="form-control"
+                                   value="{{ old('name', $user->name) }}" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">Correo electrónico</label>
+                            <input type="email" name="email" id="email" class="form-control"
+                                   value="{{ old('email', $user->email) }}" required>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success">Guardar cambios</button>
+                            <a href="{{ route('profile') }}" class="btn btn-secondary ms-2">Cancelar</a>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
-
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

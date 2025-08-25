@@ -78,14 +78,20 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Cantidad actualizada');
     }
 
-    public function remove(CartItem $cartItem)
-    {
-        if ($cartItem->user_id === Auth::id()) {
-            $cartItem->delete();
-        }
+    public function remove($id)
+{
+    $cartItem = CartItem::where('user_id', Auth::id())->find($id);
 
-        return redirect()->back()->with('success', 'Producto eliminado del carrito');
+    if (!$cartItem) {
+        return redirect()->back()->with('error', 'No se encontró el producto en tu carrito');
     }
+
+    $cartItem->delete();
+
+    return redirect()->back()->with('success', 'Producto eliminado del carrito');
+}
+
+
 
     public function clear()
     {

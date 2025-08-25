@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
+use App\Models\CartItem;
+use App\Models\OrderItem;
 
 class Product extends Model
 {

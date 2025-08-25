@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{cartItem}', [CartController::class, 'remove'])->name('remove');
         Route::post('/limpiar', [CartController::class, 'clear'])->name('clear');
         Route::post('/finalizar', [CartController::class, 'finalize'])->name('finalize');
+      
     });
 
     //PEDIDOS
