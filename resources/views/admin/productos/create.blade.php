@@ -47,7 +47,7 @@
 
     <div class="mb-3">
         <label for="images" class="form-label">Imagen</label>
-        <input type="file" name="images" class="form-control">
+        <input type="file" name="image" class="form-control">
     </div>
 
     <button type="submit" class="btn btn-success">Guardar producto</button>

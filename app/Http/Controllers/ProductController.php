@@ -47,6 +47,7 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
-        return view('products.show', compact('product', 'relatedProducts'));
+        return view('producto.show', compact('product'));
+
     }
 }

@@ -5,70 +5,78 @@
     <h2 class="mb-4">🛒 Tu carrito de compras</h2>
 
     @if($cartItems->count())
-    <form action="{{ route('cart.update', 'bulk') }}" method="POST">
-        @csrf
-        @method('PATCH')
-
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Producto</th>
-                    <th>Imagen</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($cartItems as $item)
-                <tr>
-                    <td>{{ $item->product->name }}</td>
-                    <td>
-                        <img src="{{ asset('storage/' . $item->product->image) }}" width="60" alt="Imagen del producto">
-                    </td>
-                    <td>₡{{ number_format($item->price, 2) }}</td>
-                    <td>{{ $item->product->stock }}</td>
-                    <td>
-                        <input type="number" name="quantities[{{ $item->id }}]"
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Producto</th>
+                <th>Imagen</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($cartItems as $item)
+            @php
+            $images = is_array($item->product->images) ? $item->product->images : json_decode($item->product->images, true);
+            $imagePath = !empty($images) && is_array($images) ? $images[0] : null;
+            @endphp
+            <tr>
+                <td>{{ $item->product->name }}</td>
+                <td>
+                    @if($imagePath && file_exists(public_path('storage/' . $imagePath)))
+                    <img src="{{ asset('storage/' . $imagePath) }}" width="60" alt="Imagen del producto">
+                    @else
+                    <span class="text-muted">Sin imagen</span>
+                    @endif
+                </td>
+                <td>₡{{ number_format($item->price, 2) }}</td>
+                <td>{{ $item->product->stock }}</td>
+                <td>
+                    <form action="{{ route('cart.update', $item->id) }}" method="POST" class="d-flex">
+                        @csrf
+                        @method('PATCH')
+                        <input type="number" name="quantity"
                             value="{{ $item->quantity }}"
                             min="1"
                             max="{{ $item->product->stock }}"
-                            class="form-control"
+                            class="form-control me-2"
                             style="width: 80px;">
-                    </td>
-                    <td>₡{{ number_format($item->price * $item->quantity, 2) }}</td>
-                    <td>
-                        <form action="{{ route('cart.remove', $item->id) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                        <button type="submit" class="btn btn-primary btn-sm">Actualizar</button>
+                    </form>
+                </td>
+                <td>₡{{ number_format($item->price * $item->quantity, 2) }}</td>
+                <td>
+                    <form action="{{ route('cart.remove', $item->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div>
-                <button type="submit" class="btn btn-primary me-2">Actualizar cantidades</button>
-                <form action="{{ route('cart.clear') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button class="btn btn-warning">Vaciar carrito</button>
-                </form>
-            </div>
-            <form action="{{ route('cart.finalize') }}" method="POST">
-                @csrf
-                <input type="hidden" name="payment_method" value="tarjeta">
-                <button type="submit" class="btn btn-success">
-                    Finalizar compra
-                </button>
-            </form>
-        </div>
-    </form>
+    <!-- Acciones globales -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <form action="{{ route('cart.clear') }}" method="POST">
+            @csrf
+            <button class="btn btn-warning">Vaciar carrito</button>
+        </form>
 
+        <form action="{{ route('cart.finalize') }}" method="POST">
+            @csrf
+            <input type="hidden" name="payment_method" value="tarjeta">
+            <button type="submit" class="btn btn-success">
+                Finalizar compra
+            </button>
+        </form>
+    </div>
+
+    <!-- Resumen de compra -->
     <div class="card mt-4">
         <div class="card-body">
             <h4>Resumen de compra</h4>
