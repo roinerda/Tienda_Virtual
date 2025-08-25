@@ -2,17 +2,17 @@
 
 @section('content')
 <div class="container">
-    <h1>Mis Pedidos</h1>
+    <h1 class="mb-4">📦 Mis Pedidos</h1>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     @if($orders->isEmpty())
-        <p>No tienes pedidos aún.</p>
+        <div class="alert alert-info">No tienes pedidos aún. ¡Explora productos y realiza tu primera compra!</div>
     @else
-        <table class="table">
-            <thead>
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
                 <tr>
                     <th># Pedido</th>
                     <th>Estado</th>
@@ -26,17 +26,25 @@
                 @foreach($orders as $order)
                     <tr>
                         <td>{{ $order->order_number }}</td>
-                        <td>{{ ucfirst($order->status) }}</td>
-                        <td>{{ ucfirst($order->payment_status) }}</td>
-                        <td>${{ number_format($order->total_amount, 2) }}</td>
-                        <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                         <td>
-                            <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-primary">Ver</a>
+                            <span class="badge bg-{{ $order->status === 'cancelado' ? 'danger' : ($order->status === 'completado' ? 'success' : 'secondary') }}">
+                                {{ ucfirst($order->status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ $order->payment_status === 'pagado' ? 'success' : 'warning' }}">
+                                {{ ucfirst($order->payment_status) }}
+                            </span>
+                        </td>
+                        <td>₡{{ number_format($order->total_amount, 2) }}</td>
+                        <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="d-flex gap-2">
+                            <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-outline-primary">Ver</a>
                             @if($order->status !== 'cancelado')
-                                <form action="{{ route('orders.cancel', $order) }}" method="POST" style="display:inline;">
+                                <form action="{{ route('orders.cancel', $order) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
                                 </form>
                             @endif
                         </td>
