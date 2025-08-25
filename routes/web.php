@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 | Ruta Principal - Home / Catálogo Público
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', [ProductController::class, 'index'])->name('home');
 
 /*
@@ -67,23 +68,25 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{cartItem}', [CartController::class, 'update'])->name('update');
         Route::delete('/{cartItem}', [CartController::class, 'remove'])->name('remove');
         Route::post('/limpiar', [CartController::class, 'clear'])->name('clear');
+        Route::post('/finalizar', [CartController::class, 'finalize'])->name('finalize');
     });
 
-    // PEDIDOS
+    //PEDIDOS
     Route::prefix('pedidos')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/{order}', [OrderController::class, 'show'])->name('show');
         Route::post('/', [OrderController::class, 'store'])->name('store');
         Route::patch('/{order}/cancelar', [OrderController::class, 'cancel'])->name('cancel');
+        Route::get('/{order}/pago', [OrderController::class, 'payment'])->name('payment');
+        Route::post('/{order}/confirmar-pago', [OrderController::class, 'confirmPayment'])->name('confirmPayment');
+
+        // Factura
+        Route::get('/{order}/factura', [OrderController::class, 'invoice'])->name('invoice');
+        Route::get('/{order}/factura/pdf', [OrderController::class, 'exportPdf'])->name('exportPdf');
     });
 
-    // CHECKOUT
-    Route::prefix('checkout')->name('checkout.')->group(function () {
-        Route::get('/', [PaymentController::class, 'index'])->name('index');
-        Route::post('/procesar', [PaymentController::class, 'process'])->name('process');
-        Route::get('/exito/{order}', [PaymentController::class, 'success'])->name('success');
-        Route::get('/error', [PaymentController::class, 'error'])->name('error');
-    });
+
+
 
     // MI CUENTA
     Route::prefix('mi-cuenta')->name('account.')->group(function () {
@@ -149,4 +152,4 @@ Route::prefix('admin')
 | Rutas de autenticación
 |--------------------------------------------------------------------------
 */
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
