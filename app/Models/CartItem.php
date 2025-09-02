@@ -20,9 +20,10 @@ class CartItem extends Model
 {
     use HasFactory;
 
-    // Tabla asociada (opcional, Laravel infiere "cart_items")
+    // Nombre de la tabla 
     protected $table = 'cart_items';
 
+    // Campos que se pueden asignar masivamente
     protected $fillable = [
         'user_id',
         'product_id',
@@ -30,13 +31,13 @@ class CartItem extends Model
         'price',
     ];
 
-
-
+    // Relación: el ítem pertenece a un usuario
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    // Relación: el ítem pertenece a un producto
     public function product()
     {
         return $this->belongsTo(Product::class);

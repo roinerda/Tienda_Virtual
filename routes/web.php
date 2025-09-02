@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Rutas de la Tienda Virtual - PÚBLICAS
+| Rutas de la Tienda Virtual 
 |--------------------------------------------------------------------------
 */
 // Productos

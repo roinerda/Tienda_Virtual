@@ -9,17 +9,16 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
-    // Mostrar lista de pedidos del usuario
+    // Muestra la lista de pedidos del usuario autenticado
     public function index()
     {
         $orders = Order::where('user_id', Auth::id())->latest()->get();
         return view('orders.index', compact('orders'));
     }
 
-    // Mostrar detalle de un pedido
+    // Muestra el detalle de un pedido específico, validando que pertenezca al usuario
     public function show(Order $order)
     {
-        // Asegurarse de que el pedido pertenece al usuario
         if ($order->user_id !== Auth::id()) {
             abort(403);
         }
@@ -27,7 +26,7 @@ class OrderController extends Controller
         return view('orders.show', compact('order'));
     }
 
-    // Crear un nuevo pedido
+    // Crea un nuevo pedido a partir de los ítems del carrito del usuario
     public function store(Request $request)
     {
         $userId = Auth::id();
@@ -71,7 +70,7 @@ class OrderController extends Controller
         return redirect()->route('orders.show', $order->id)->with('success', 'Pedido creado correctamente.');
     }
 
-    // Cancelar un pedido
+    // Cancela un pedido si pertenece al usuario autenticado
     public function cancel(Order $order)
     {
         if ($order->user_id !== Auth::id()) {
@@ -83,6 +82,7 @@ class OrderController extends Controller
         return redirect()->route('orders.index')->with('success', 'Pedido cancelado.');
     }
 
+    // Muestra la vista de pago para el pedido, validando propiedad del usuario
     public function payment(Order $order)
     {
         if ($order->user_id !== Auth::id()) {
@@ -91,44 +91,47 @@ class OrderController extends Controller
 
         return view('orders.payment', compact('order'));
     }
+
+    // Confirma el pago del pedido y actualiza las direcciones de facturación y envío
     public function confirmPayment(Request $request, Order $order)
-{
-    if ($order->user_id !== Auth::id()) {
-        abort(403);
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'payment_method' => 'required|in:tarjeta,paypal,transferencia',
+            'billing_address.calle' => 'nullable|string|max:255',
+            'billing_address.ciudad' => 'nullable|string|max:255',
+            'billing_address.provincia' => 'nullable|string|max:255',
+            'billing_address.codigo_postal' => 'nullable|string|max:20',
+            'shipping_address.calle' => 'nullable|string|max:255',
+            'shipping_address.ciudad' => 'nullable|string|max:255',
+            'shipping_address.provincia' => 'nullable|string|max:255',
+            'shipping_address.codigo_postal' => 'nullable|string|max:20',
+        ]);
+
+        $order->update([
+            'payment_status' => 'pagado',
+            'payment_method' => $validated['payment_method'],
+            'billing_address' => $validated['billing_address'] ?? $order->billing_address,
+            'shipping_address' => $validated['shipping_address'] ?? $order->shipping_address,
+        ]);
+
+        return redirect()->route('orders.show', $order->id)
+            ->with('success', 'Pago confirmado correctamente y direcciones actualizadas.');
     }
 
-    $validated = $request->validate([
-        'payment_method' => 'required|in:tarjeta,paypal,transferencia',
-        'billing_address.calle' => 'nullable|string|max:255',
-        'billing_address.ciudad' => 'nullable|string|max:255',
-        'billing_address.provincia' => 'nullable|string|max:255',
-        'billing_address.codigo_postal' => 'nullable|string|max:20',
-        'shipping_address.calle' => 'nullable|string|max:255',
-        'shipping_address.ciudad' => 'nullable|string|max:255',
-        'shipping_address.provincia' => 'nullable|string|max:255',
-        'shipping_address.codigo_postal' => 'nullable|string|max:20',
-    ]);
-
-    $order->update([
-        'payment_status' => 'pagado',
-        'payment_method' => $validated['payment_method'],
-        'billing_address' => $validated['billing_address'] ?? $order->billing_address,
-        'shipping_address' => $validated['shipping_address'] ?? $order->shipping_address,
-    ]);
-
-    return redirect()->route('orders.show', $order->id)
-        ->with('success', 'Pago confirmado correctamente y direcciones actualizadas.');
-}
-
+    // Muestra la factura del pedido en formato HTML
     public function invoice(Order $order)
     {
         return view('orders.invoice', compact('order'));
     }
 
+    // Exporta la factura del pedido como archivo PDF descargable
     public function exportPdf(Order $order)
     {
         $pdf = Pdf::loadView('orders.invoice', compact('order'));
         return $pdf->download('factura_' . $order->order_number . '.pdf');
     }
-   
 }
