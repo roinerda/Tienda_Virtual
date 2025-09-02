@@ -11,6 +11,7 @@ use App\Models\Order;
 
 class CartController extends Controller
 {
+    // Muestra los ítems del carrito del usuario junto con el resumen de precios
     public function index()
     {
         $cartItems = CartItem::with('product')
@@ -18,13 +19,14 @@ class CartController extends Controller
             ->get();
 
         $subtotal = $cartItems->sum(fn($item) => $item->quantity * $item->price);
-        $tax = $subtotal * 0.16; // IVA 16%
-        $shipping = 2500; // Envío fijo
+        $tax = $subtotal * 0.16;
+        $shipping = 2500;
         $total = $subtotal + $tax + $shipping;
 
         return view('cart.index', compact('cartItems', 'subtotal', 'tax', 'shipping', 'total'));
     }
 
+    // Agrega un producto al carrito, actualizando cantidad si ya existe
     public function add(Request $request)
     {
         $product = Product::findOrFail($request->product_id);
@@ -56,8 +58,10 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Producto agregado al carrito');
     }
 
+    // Actualiza la cantidad de un ítem del carrito, individual o en lote
     public function update(Request $request, $cartItemId = null)
     {
+        // Actualización masiva de cantidades
         if ($cartItemId === 'bulk') {
             foreach ($request->quantities as $id => $qty) {
                 $item = CartItem::where('user_id', Auth::id())->find($id);
@@ -68,6 +72,7 @@ class CartController extends Controller
             return redirect()->back()->with('success', 'Cantidades actualizadas');
         }
 
+        // Actualización individual
         $cartItem = CartItem::where('user_id', Auth::id())->findOrFail($cartItemId);
         $qty = $request->quantity;
 
@@ -78,27 +83,28 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Cantidad actualizada');
     }
 
+    // Elimina un ítem del carrito del usuario
     public function remove($id)
-{
-    $cartItem = CartItem::where('user_id', Auth::id())->find($id);
+    {
+        $cartItem = CartItem::where('user_id', Auth::id())->find($id);
 
-    if (!$cartItem) {
-        return redirect()->back()->with('error', 'No se encontró el producto en tu carrito');
+        if (!$cartItem) {
+            return redirect()->back()->with('error', 'No se encontró el producto en tu carrito');
+        }
+
+        $cartItem->delete();
+
+        return redirect()->back()->with('success', 'Producto eliminado del carrito');
     }
 
-    $cartItem->delete();
-
-    return redirect()->back()->with('success', 'Producto eliminado del carrito');
-}
-
-
-
+    // Vacía completamente el carrito del usuario
     public function clear()
     {
         CartItem::where('user_id', Auth::id())->delete();
         return redirect()->back()->with('success', 'Carrito vaciado');
     }
 
+    // Finaliza el proceso de compra, crea el pedido y limpia el carrito
     public function finalize(Request $request)
     {
         $userId = Auth::id();
@@ -125,7 +131,6 @@ class CartController extends Controller
             'payment_method' => $request->payment_method ?? 'tarjeta',
             'billing_address' => (object)[],
             'shipping_address' => (object)[],
-
         ]);
 
         foreach ($cartItems as $item) {
